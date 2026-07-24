@@ -1,0 +1,17 @@
+{
+  "name": "Sabertaz Blog",
+  "short_name": "Blog",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "200x200",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#171717",
+  "background_color": "#ffffff",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

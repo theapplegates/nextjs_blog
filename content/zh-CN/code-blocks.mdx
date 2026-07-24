@@ -1,0 +1,664 @@
+---
+layout: post
+title: '实现精美的代码块'
+description: '在 Next.js 中实现精美的代码块'
+author: 'Sabertaz'
+date: 2022-05-01
+thumbnail: '/thumbnails/laptop-computer-on-table.jpg'
+tags:
+  - MDX
+  - Markdown
+  - 代码编辑器
+  - React
+  - Next.js
+  - 前端开发
+  - Web 开发
+---
+
+# 精美代码块
+
+## 行号
+
+启用行号 `line="true"`：
+
+```ts line="true"
+console.log('有行号！')
+```
+
+## 复制按钮
+
+禁用复制按钮 `nocopy="true"`：
+
+```ts nocopy="true"
+console.log('没有复制按钮!')
+```
+
+## 行高亮
+
+设置高亮行 `lines="2,5,8-10,12,14..16,19,22...25,29"`：
+
+```ts line="true" lines="2,5,8-10,12,14..16,19,22...25,29"
+import type { Parent } from 'mdast'
+import { visit } from 'unist-util-visit'
+
+/**
+ * Markdown 抽象语法树节点定义。
+ * @see https://github.com/syntax-tree/mdast
+ */
+interface ContainerDirective extends Parent {
+  name: string
+  attributes: Record<string, string>
+  value?: string
+}
+
+export default function remarkAdmonitions() {
+  return (tree: any) => {
+    visit(tree, (node: ContainerDirective) => {
+      if (node.type === 'containerDirective') {
+        node.data = {
+          hName: 'aside',
+          hProperties: {
+            type: node.name,
+            title: Object.keys(node.attributes).join(' '),
+            className: `admonition admonition-${node.name}`,
+          },
+        }
+      }
+    })
+  }
+}
+```
+
+## 代码标题
+
+显示代码标题 `title="精彩代码"`：
+
+```ts title="精彩代码"
+console.log('精彩!')
+```
+
+## 实时代码
+
+实时代码编辑器 `live="true"`：
+
+```tsx live="true" title="实时代码"
+export default function App() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '90vh',
+      }}
+    >
+      <button
+        style={{
+          paddingBlock: '4px',
+          paddingInline: '12px',
+          fontSize: '20px',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          background: 'transparent',
+          borderRadius: '10px',
+        }}
+        onClick={() => setCount(count => count + 1)}
+      >
+        {count}
+      </button>
+    </div>
+  )
+}
+```
+
+实时代码编辑器 `<Editor> ```tsx 一些代码``` </Editor>`：
+
+<Editor>
+
+```tsx
+import Greet from './Greet'
+
+export default function MyApp() {
+  return (
+    <div>
+      <h1>我的应用</h1>
+      <Greet />
+    </div>
+  )
+}
+```
+
+```tsx filename="Greet.tsx"
+function Greeting({ name }) {
+  return <h3>你好，{name}！</h3>
+}
+
+export default function Greet() {
+  return (
+    <div>
+      <Greeting name="任天堂" />
+      <Greeting name="索尼" />
+      <Greeting name="微软" />
+    </div>
+  )
+}
+```
+
+</Editor>
+
+## 代码示例
+
+### 标记语言
+
+```html
+<h2>JSX 标题 2</h2>
+
+<abbr title="超文本标记语言">HTML</abbr> 是一种可爱的语言。
+
+<section>这里 *markdown* 在 **JSX** 中！</section>
+```
+
+```xml
+<div># 这不是标题，但 *这* 是强调</div>
+
+<div>这是一个 `p`。</div>
+```
+
+### 样式语言
+
+```css
+:root {
+  --primary: #1677ff;
+  --secondary: #40a9ff;
+}
+
+body {
+  font-family: var(--font-stack);
+}
+```
+
+```scss
+$primary: #1677ff;
+
+.button {
+  background: $primary;
+
+  &:hover {
+    background: darken($primary, 10%);
+  }
+}
+```
+
+```sass
+$font-stack: Helvetica, sans-serif
+$primary-color: #333
+
+body
+  font: 100% $font-stack
+  color: $primary-color
+```
+
+```less
+@primary: #1677ff;
+
+.button {
+  background: @primary;
+  &:hover {
+    background: darken(@primary, 10%);
+  }
+}
+```
+
+```stylus
+primary = #1677ff
+
+.button
+  background primary
+  &:hover
+    background darken(primary, 10%)
+```
+
+```postcss
+@custom-media --small-viewport (max-width: 30em);
+
+@media (--small-viewport) {
+  body {
+    font-size: 14px;
+  }
+}
+```
+
+### 脚本语言
+
+```js
+const foo = function (bar) {
+  return bar++
+}
+
+foo(5)
+```
+
+```ts
+interface User {
+  name: string
+  age: number
+}
+
+const greet = (user: User): string => {
+  return `Hello, ${user.name}!`
+}
+```
+
+```jsx
+function Welcome({ name }) {
+  return <h1>Hello, {name}</h1>
+}
+
+export default function App() {
+  return <Welcome name="World" />
+}
+```
+
+```tsx
+interface Props {
+  name: string
+}
+
+const Welcome: React.FC<Props> = ({ name }) => {
+  return <h1>Hello, {name}</h1>
+}
+```
+
+```coffee
+square = (x) -> x * x
+
+list = [1, 2, 3, 4, 5]
+squares = (square num for num in list)
+```
+
+### 前端框架
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const count = ref(0)
+</script>
+
+<template>
+  <button @click="count++">
+    Count: {{ count }}
+  </button>
+</template>
+```
+
+```svelte
+<script>
+  let count = 0
+
+  function increment() {
+    count += 1
+  }
+</script>
+
+<button on:click={increment}>
+  Clicks: {count}
+</button>
+```
+
+```astro
+---
+const greeting = 'Hello'
+const name = 'Astro'
+---
+
+<h1>{greeting}, {name}!</h1>
+```
+
+```angular-ts
+import { Component } from '@angular/core'
+
+@Component({
+  selector: 'app-root',
+  template: '<h1>{{ title }}</h1>',
+})
+export class AppComponent {
+  title = 'Hello Angular'
+}
+```
+
+```marko
+class {
+  onCreate() {
+    this.state = { count: 0 }
+  }
+  increment() {
+    this.state.count++
+  }
+}
+
+<button on-click('increment')>
+  Count: ${state.count}
+</button>
+```
+
+```lit
+import { html, LitElement } from 'lit'
+
+class MyElement extends LitElement {
+  render() {
+    return html`<p>Hello from LitElement!</p>`
+  }
+}
+```
+
+### Markdown
+
+```md
+# 标题
+
+这是一个 **粗体** 和 *斜体* 的示例。
+
+- 列表项 1
+- 列表项 2
+
+[链接](https://example.com)
+```
+
+```mdx
+import { Button } from './Button'
+
+# MDX 示例
+
+这是一个 MDX 文件，可以导入组件。
+
+<Button>点击我</Button>
+```
+
+### 数据格式
+
+```json
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "^18.0.0"
+  }
+}
+```
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install
+      - run: npm test
+```
+
+```csv
+name,age,email
+Alice,30,alice@example.com
+Bob,25,bob@example.com
+Charlie,35,charlie@example.com
+```
+
+### Shell 脚本
+
+```bash
+#!/bin/bash
+
+for file in *.txt; do
+  echo "Processing $file"
+  cat "$file" | wc -l
+done
+```
+
+```zsh
+# Zsh 特有语法
+typeset -A colors
+colors=(red '#ff0000' green '#00ff00' blue '#0000ff')
+
+for key value in ${(kv)colors}; do
+  echo "$key: $value"
+done
+```
+
+```shell
+# 通用 Shell 脚本
+echo "Hello, World!"
+ls -la
+pwd
+```
+
+### 后端语言
+
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+```python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+print(fibonacci(10))
+```
+
+```php
+<?php
+class User {
+    public string $name;
+
+    public function __construct(string $name) {
+        $this->name = $name;
+    }
+
+    public function greet(): string {
+        return "Hello, {$this->name}!";
+    }
+}
+```
+
+```c
+#include <stdio.h>
+
+int main() {
+    printf("Hello, World!\n");
+    return 0;
+}
+```
+
+```cpp
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    for (const auto& n : numbers) {
+        std::cout << n << std::endl;
+    }
+    return 0;
+}
+```
+
+```r
+fibonacci <- function(n) {
+  if (n <= 1) return(n)
+  return(fibonacci(n - 1) + fibonacci(n - 2))
+}
+
+print(fibonacci(10))
+```
+
+```julia
+function fibonacci(n)
+    if n <= 1
+        return n
+    end
+    return fibonacci(n - 1) + fibonacci(n - 2)
+end
+
+println(fibonacci(10))
+```
+
+### 查询语言
+
+```sql
+SELECT users.name, orders.total
+FROM users
+INNER JOIN orders ON users.id = orders.user_id
+WHERE orders.created_at > '2024-01-01'
+ORDER BY orders.total DESC
+LIMIT 10;
+```
+
+```graphql
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    name
+    email
+    posts {
+      title
+      content
+    }
+  }
+}
+```
+
+### 模板引擎
+
+```pug
+doctype html
+html
+  head
+    title 我的网站
+  body
+    h1 欢迎
+    p 这是一个段落
+```
+
+```handlebars
+<div class="entry">
+  <h1>{{title}}</h1>
+  {{#if author}}
+    <h2>By {{author.name}}</h2>
+  {{/if}}
+</div>
+```
+
+```jinja
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+  {% for item in items %}
+    <li>{{ item.name }}</li>
+  {% endfor %}
+{% endblock %}
+```
+
+```blade
+@extends('layouts.app')
+
+@section('content')
+  <h1>{{ $title }}</h1>
+  @foreach ($users as $user)
+    <p>{{ $user->name }}</p>
+  @endforeach
+@endsection
+```
+
+```haml
+%html
+  %head
+    %title 我的网站
+  %body
+    %h1 欢迎
+    %p 这是一个段落
+```
+
+### HTTP 请求
+
+```http
+POST /api/users HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Authorization: Bearer token123
+
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+```
+
+```hurl
+GET https://api.example.com/users
+HTTP 200
+[Asserts]
+header "Content-Type" contains "application/json"
+jsonpath "$.users" count == 10
+```
+
+### WebAssembly
+
+```wasm
+(module
+  (func $add (param $a i32) (param $b i32) (result i32)
+    local.get $a
+    local.get $b
+    i32.add)
+  (export "add" (func $add))
+)
+```
+
+### 着色器语言
+
+```glsl
+#version 330 core
+
+in vec3 FragPos;
+in vec3 Normal;
+out vec4 FragColor;
+
+uniform vec3 lightPos;
+uniform vec3 lightColor;
+
+void main() {
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+    FragColor = vec4(diffuse, 1.0);
+}
+```
+
+```wgsl
+@vertex
+fn vs_main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
+    return vec4<f32>(position, 1.0);
+}
+
+@fragment
+fn fs_main() -> @location(0) vec4<f32> {
+    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+}
+```
+
+### 正则表达式
+
+```regex
+^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+```

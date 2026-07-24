@@ -1,0 +1,9 @@
+{
+  "origins": [
+    "https://blog.tazimi.dev"
+  ],
+  "originsRegex": [
+    "https://blog-git-([A-z0-9]|-)*sabertaz\\.vercel\\.app"
+  ],
+  "defaultCommentOrder": "oldest"
+}

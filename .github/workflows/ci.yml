@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+      - name: Setup Node environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          architecture: x64
+          registry-url: https://registry.npmjs.org/
+          cache: pnpm
+      - name: Install dependencies
+        run: |
+          pnpm install
+      - name: Run linter tests
+        run: |
+          pnpm lint
+
+  unit:
+    name: Unit Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [lts/*]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+      - name: Setup Node environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          check-latest: true
+          architecture: x64
+          registry-url: https://registry.npmjs.org/
+          cache: pnpm
+      - name: Install dependencies
+        run: |
+          pnpm install
+      - name: Run unit tests
+        run: |
+          pnpm test:all
+      - name: Report code coverage
+        uses: codecov/codecov-action@v7
+        if: ${{ matrix.node-version == 'lts/*' && matrix.os == 'ubuntu-latest' }}
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  e2e:
+    name: E2E Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [lts/*]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+      - name: Setup Node environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          check-latest: true
+          architecture: x64
+          registry-url: https://registry.npmjs.org/
+          cache: pnpm
+      - name: Install dependencies
+        run: |
+          pnpm install
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "version=$(jq -r '.devDependencies["@playwright/test"]' package.json | sed 's/^[^0-9]*//')" >> $GITHUB_OUTPUT
+      - name: Setup Playwright binary cache
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: '${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}'
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - name: Install Playwright with dependencies
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm playwright install --with-deps
+
+      - name: Install Playwright's dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm playwright install-deps
+      - name: Run e2e tests
+        run: |
+          pnpm e2e
+      - name: Archive e2e report
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [lts/*]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0 # Keep `0` for git time
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+      - name: Setup Node environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          check-latest: true
+          architecture: x64
+          registry-url: https://registry.npmjs.org/
+          cache: pnpm
+      - name: Install dependencies
+        run: |
+          pnpm install
+      - name: Build application
+        run: |
+          pnpm build
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v7
+        if: ${{ matrix.node-version == 'lts/*' && matrix.os == 'ubuntu-latest' }}
+        with:
+          name: app
+          path: .next
+
+  publish:
+    name: Publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [lint, unit, e2e, build]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Setup Node environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          check-latest: true
+          architecture: x64
+          registry-url: https://registry.npmjs.org/
+      - name: Release to GitHub
+        run: |
+          npx changelogithub
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
